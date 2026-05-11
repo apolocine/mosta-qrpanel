@@ -1,0 +1,78 @@
+{
+  "name": "@mostajs/qrpanel",
+  "version": "0.4.0",
+  "description": "QR code panel — server-side PNG/SVG generator with 12 built-in themes (image-as-frame composite, ECC=H), config-driven (.qrconfig.json), cross-OS no chromium, + React <QrPanel> client with copy/share/mailto.",
+  "author": "Dr Hamid MADANI <drmdh@msn.com>",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "qrpanel": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "default": "./dist/server.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js",
+      "default": "./dist/client.js"
+    },
+    "./themes": {
+      "types": "./dist/themes.d.ts",
+      "import": "./dist/themes.js",
+      "default": "./dist/themes.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js",
+      "default": "./dist/config.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "qrcode",
+    "qr",
+    "themes",
+    "branded-qr",
+    "react",
+    "invite",
+    "magic-link",
+    "config-driven"
+  ],
+  "scripts": {
+    "build": "tsc && chmod +x dist/cli.js 2>/dev/null || true",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "@mostajs/auth": "^3.2.0",
+    "@resvg/resvg-js": "^2.6.2"
+  },
+  "peerDependencies": {
+    "react": ">=18 <20"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.6.0"
+  }
+}
