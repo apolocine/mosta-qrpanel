@@ -1,77 +1,103 @@
-# @mostajs/qrpanel — fiche LLM (v0.5.0)
+# @mostajs/qrpanel — fiche LLM
+> Panneau QR code : générateur serveur PNG/SVG à 12 thèmes (image-as-frame, ECC=H), piloté par config (.qrconfig.json), sans chromium, + composant React <QrPanel> avec copier/partager/mailto.
 
-Génération de QR codes pour apps Node/React. Trois briques complémentaires :
-serveur (PNG/SVG thématiques), composant React de partage, génération
-locale navigateur. Auteur : Dr Hamid MADANI <drmdh@msn.com>. AGPL-3.0-or-later.
+- Version: 0.5.0 · Licence: AGPL-3.0-or-later · Auteur: Dr Hamid MADANI <drmdh@msn.com>
+- Chemin: mostajs/mosta-qrpanel · Statut audit: complet (dist/)
+
+## RÔLE
+Génère des QR codes pour apps Node/React. Trois briques complémentaires : (1) serveur —
+PNG/SVG/DataURL thématiques rendus côté Node via @resvg/resvg-js (pas de chromium) ;
+(2) client `<QrPanel>` — panneau d'invitation interactif (QR + lien + copier/partager) ;
+(3) `<QrImage>` — génération locale navigateur, COEP-safe. Inclut un CLI `qrpanel`.
 
 ## INSTALLATION
-npm install @mostajs/qrpanel
-Dep : qrcode. Peer deps optionnelles : react ≥18 <20 (./client, ./qr-image) ;
-@mostajs/auth + @resvg/resvg-js — requis UNIQUEMENT par ./server (à
-installer soi-même si on utilise generateQr* / buildInviteUrls).
+npm i @mostajs/qrpanel
+Dépendance directe : qrcode. Peers optionnelles : react (>=18 <20) pour ./client et
+./qr-image ; @mostajs/auth + @resvg/resvg-js requis uniquement par ./server.
 
-## SOUS-EXPORTS — choisir le bon point d'entrée
-import { ... } from '@mostajs/qrpanel'           // barrel (server+client+themes+config)
-import { ... } from '@mostajs/qrpanel/server'    // Node only (@resvg natif)
-import { QrPanel } from '@mostajs/qrpanel/client' // React, qrSrc fourni
-import QrImage from '@mostajs/qrpanel/qr-image'   // React, génération locale
-import { ... } from '@mostajs/qrpanel/themes'
-import { ... } from '@mostajs/qrpanel/config'
-⚠ Le barrel `.` tire server.ts (natif) — ne pas l'importer en bundle client.
+## EXPORTS
+- ./server : generateQrPng, generateQrSvg, generateQrDataUrl, buildInviteUrls + (ré-export) themes & config
+- ./client : QrPanel
+- ./qr-image : QrImage (default), useQrDataUrl
+- ./themes : THEMES, THEME_KEYS, listThemes, getTheme, pickRandomTheme, buildThemeFrameSvg
+- ./config : DEFAULT_CONFIG, loadQrConfig, ensureQrConfig, clearConfigCache
+- "." (barrel) : ré-exporte server + client + themes + config
+- bin `qrpanel` → CLI
 
-## ./server — génération Node (PNG/SVG/DataUrl)
-generateQrPng(text, opts?) → Promise<Buffer>
-generateQrSvg(text, opts?) → Promise<string>
-generateQrDataUrl(text, opts?) → Promise<string>  // data:image/png;base64
-  opts: QrOptions { width, margin, errorCorrectionLevel:'L'|'M'|'Q'|'H',
-    darkColor, lightColor, genimage?, theme?, themePool?, framePadding?,
-    centerWhiteRatio?, themeOpacity?, themeColor? }.
-  Pipeline thématique : 12 thèmes image-as-frame (ECC=H), piloté par
-  `.qrconfig.json` (chargé à process.cwd(), cache mtime). genimage=false
-  → QR pur legacy. Rasterisation via @resvg/resvg-js (pas de chromium).
-buildInviteUrls({baseUrl,directPath,inviteSecret,inviteId,ttlMs?,
-  invitePath?,inviteMeta?}) → { directUrl, inviteUrl, inviteToken }
-  — signe un invite-token HMAC (@mostajs/auth) + paire d'URLs prête
-  pour <QrPanel>.
+## EXPORTS PAR SOUS-CHEMIN
+- "." → barrel complet (server + client + themes + config) — ⚠ tire le code natif serveur
+- "./server" → generateQr*, buildInviteUrls, themes, config (Node uniquement)
+- "./client" → QrPanel (React, qrSrc fourni par l'app)
+- "./qr-image" → QrImage, useQrDataUrl (React, génération locale)
+- "./themes" → registry des 12 thèmes natifs
+- "./config" → chargement/écriture de .qrconfig.json
 
-## ./client — <QrPanel> (React, partage)
-<QrPanel modes title? mailSubject? mailBodyTemplate? mailTo? mailBcc?
-  qrSize? initialModeIndex? className? />
-  modes: QrPanelMode[] { key, label, url, qrSrc, description? }.
-  Affiche QR + URL copiable + actions copier / ouvrir / mailto + download.
-  NE génère PAS le QR : l'app fournit `qrSrc` (endpoint ou data URL).
-  Style : classes Tailwind (compilées par l'app consumer).
+## API — SIGNATURES
+- function generateQrPng(text: string, opts?: QrOptions): Promise<Buffer>
+- function generateQrSvg(text: string, opts?: QrOptions): Promise<string>
+- function generateQrDataUrl(text: string, opts?: QrOptions): Promise<string>   // data:image/png;base64
+- function buildInviteUrls(opts: BuildInviteUrlsOptions): InviteUrls
+- function QrPanel(props: QrPanelProps): JSX.Element | null
+- function QrImage(props: QrImageProps): JSX.Element
+- function useQrDataUrl(data: string, opts?: QrDataUrlOptions): { src: string; loading: boolean; error: string|null }
+- function listThemes(): ThemeKey[]
+- function getTheme(key: ThemeKey): ThemeAsset
+- function pickRandomTheme(pool?: ThemeKey[]): ThemeKey
+- function buildThemeFrameSvg(theme: ThemeAsset, opts: BuildFrameOpts): string
+- function loadQrConfig(cwd?: string): QrConfig
+- function ensureQrConfig(cwd?: string, overrides?: Partial<QrConfigDefaults>): string
+- function clearConfigCache(): void
 
-## ./qr-image — <QrImage> (React, génération locale) — v0.5.0
-<QrImage data size? margin? errorCorrectionLevel? darkColor? lightColor?
-  alt? style? className? />
-  Génère le QR 100% navigateur (data URL via `qrcode`) et le rend en
-  `<img>`. Style-neutre (pas de Tailwind requis). États : loading / error.
-useQrDataUrl(data, opts?) → { src, loading, error }
-  — hook primitif (le QR data URL sans le rendu).
-  QrDataUrlOptions { size=200, margin=2, errorCorrectionLevel='M',
-    darkColor='#0f172a', lightColor='#ffffff' }.
-COEP-safe : indispensable sous cross-origin isolation (`require-corp`),
-  où une image QR cross-origin (service externe) est bloquée.
+## TYPES CLÉS
+- QrOptions { width?=600; margin?=2; errorCorrectionLevel?='L'|'M'|'Q'|'H'; darkColor?='#0f172a';
+    lightColor?='#ffffff'; genimage?: boolean; theme?: ThemeKey|'random'|'none'|{ svg; label? };
+    themePool?: ThemeKey[]; framePadding?=0.13; centerWhiteRatio?=0.62; themeOpacity?=1; themeColor?='#1e293b' }
+- BuildInviteUrlsOptions { baseUrl: string; directPath: string; inviteSecret: string|Buffer;
+    inviteId: string; ttlMs?; invitePath?='/invite'; inviteMeta? }
+- InviteUrls { directUrl: string; inviteUrl: string; inviteToken: string }
+- QrPanelMode { key; label; url; qrSrc: string; description? }
+- QrPanelProps { modes: QrPanelMode[]; initialModeIndex?=0; title?; mailSubject?; mailBodyTemplate?;
+    mailTo?: string[]|string; mailBcc?: string[]|string; qrSize?=260; className? }
+- QrImageProps extends QrDataUrlOptions { data: string; alt?; style?; className? }
+- QrDataUrlOptions { size?=200; margin?=2; errorCorrectionLevel?='M'; darkColor?='#0f172a'; lightColor?='#ffffff' }
+- ThemeKey = 'baby'|'animals'|'science'|'physics'|'chemistry'|'math'|'nature'|'tech'|'space'|'music'|'book'|'health'
+- ThemeAsset { key: ThemeKey; label: string; motif: string }
+- QrConfig { default: QrConfigDefaults; customThemes?: Record<string,{svg;label?}> }
+- QrFormat = 'svg'|'png'|'dataUrl' ; QrEcc = 'L'|'M'|'Q'|'H'
 
-## ./themes — registry de thèmes
-THEME_KEYS, listThemes(), getTheme(key), THEMES — 12 thèmes natifs.
-type ThemeKey, ThemeAsset.
+## PATTERN
+```ts
+// Serveur — QR thématique en route API (Node uniquement)
+import { generateQrPng } from '@mostajs/qrpanel/server';
+const png = await generateQrPng('https://app.example.com/x', { theme: 'tech', errorCorrectionLevel: 'H' });
 
-## ./config — .qrconfig.json
-loadQrConfig(), ensureQrConfig(), clearConfigCache(), DEFAULT_CONFIG.
-type QrConfig, QrConfigDefaults, QrFormat, QrEcc.
+// Client — panneau d'invitation
+import { QrPanel } from '@mostajs/qrpanel/client';
+<QrPanel modes={[{ key: 'direct', label: 'Lien', url, qrSrc: '/api/qr?u=' + url }]} />
 
-## CLI
-npx qrpanel — bin pour générer des QR en ligne de commande.
+// Génération locale navigateur (COEP-safe)
+import QrImage from '@mostajs/qrpanel/qr-image';
+<QrImage data="https://example.com" size={240} />
+```
 
-## QUEL OUTIL CHOISIR
-- QR thématique / brandé, rendu serveur, SEO/email → ./server generateQr*.
-- Panneau d'invitation interactif (copier/partager) → ./client <QrPanel>.
-- QR rendu dans le navigateur, pas de serveur, COEP isolation → ./qr-image.
+## DÉPEND DE
+- @mostajs/auth (peer optionnel, >=3.2.0) — requis par buildInviteUrls (signature HMAC du token)
+- @resvg/resvg-js (peer optionnel, >=2.6.2) — requis par generateQr* (rasterisation SVG → PNG)
+- react (peer optionnel, >=18 <20) — pour ./client et ./qr-image
 
 ## PIÈGES
-- N'importer NI le barrel `.` NI `./server` dans un bundle client : @resvg
-  est un binaire natif Node.
-- ./client <QrPanel> attend un `qrSrc` — il ne génère rien lui-même.
-- Tailwind requis pour le style de <QrPanel> (pas pour <QrImage>).
+- Ne PAS importer le barrel "." ni "./server" dans un bundle navigateur : @resvg/resvg-js
+  est un binaire natif Node. Côté client, utiliser exclusivement ./client ou ./qr-image.
+- `<QrPanel>` NE génère PAS le QR : l'app fournit `qrSrc` (endpoint API ou data URL).
+- `<QrPanel>` requiert Tailwind (style compilé par l'app) ; `<QrImage>` est style-neutre.
+- `genimage: false` court-circuite tout le pipeline thématique (QR pur, comportement legacy).
+- `theme: 'H'` (ECC=30%) recommandé pour les thèmes image-as-frame ; un ECC plus bas peut
+  rendre le QR illisible avec un cadre.
+- `loadQrConfig` peut auto-créer `.qrconfig.json` à `process.cwd()` ; désactiver via
+  `QRPANEL_AUTO_ENSURE=false`. Échec d'écriture → fallback transparent sur DEFAULT_CONFIG.
+- `mailBcc` recommandé pour les cohortes (les destinataires ne se voient pas) vs `mailTo`.
+
+## RÉFÉRENCES
+- README.md
+- CHANGELOG.md
+- src/, dist/cli.js (CLI `npx qrpanel`)
