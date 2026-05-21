@@ -1,6 +1,6 @@
 {
   "name": "@mostajs/qrpanel",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "QR code panel — server-side PNG/SVG generator with 12 built-in themes (image-as-frame composite, ECC=H), config-driven (.qrconfig.json), cross-OS no chromium, + React <QrPanel> client with copy/share/mailto.",
   "author": "Dr Hamid MADANI <drmdh@msn.com>",
   "license": "AGPL-3.0-or-later",
@@ -26,6 +26,11 @@
       "import": "./dist/client.js",
       "default": "./dist/client.js"
     },
+    "./qr-image": {
+      "types": "./dist/qr-image.d.ts",
+      "import": "./dist/qr-image.js",
+      "default": "./dist/qr-image.js"
+    },
     "./themes": {
       "types": "./dist/themes.d.ts",
       "import": "./dist/themes.js",
@@ -40,7 +45,9 @@
   "files": [
     "dist",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "llms.txt"
   ],
   "keywords": [
     "qrcode",
@@ -58,20 +65,24 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "qrcode": "^1.5.4",
-    "@mostajs/auth": "^3.2.0",
-    "@resvg/resvg-js": "^2.6.2"
+    "qrcode": "^1.5.4"
   },
   "peerDependencies": {
-    "react": ">=18 <20"
+    "react": ">=18 <20",
+    "@mostajs/auth": ">=3.2.0",
+    "@resvg/resvg-js": ">=2.6.2"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": { "optional": true },
+    "@mostajs/auth": { "optional": true },
+    "@resvg/resvg-js": { "optional": true }
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.0",
+    "@mostajs/auth": "^3.2.0",
+    "@resvg/resvg-js": "^2.6.2",
     "react": "^19.0.0",
     "typescript": "^5.6.0"
   }
